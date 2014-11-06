@@ -1,8 +1,9 @@
 {
   "name": "iedriver",
-  "version": "2.10.0-1",
+  "version": "2.1.1",
   "keywords": [
     "iedriver",
+    "iedriverserver",
     "selenium"
   ],
   "description": "IEDriver for Selenium",
