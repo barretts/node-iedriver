@@ -3,6 +3,13 @@ IEDriver
 
 An NPM wrapper for Selenium [IEDriver](http://selenium-release.storage.googleapis.com).
 
+Testing notes
+-----------------------
+If you're testing on Windows 8 KB3025390 from Janurary 5th 2015 breaks IEDriver, just uninstall that update.
+
+More tips on getting setup right: http://heliumhq.com/docs/internet_explorer
+
+
 Building and Installing
 -----------------------
 
