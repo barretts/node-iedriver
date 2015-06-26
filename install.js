@@ -46,8 +46,8 @@ npmconf.load(function(err, conf) {
     return requestBinary(getRequestOptions(conf.get('proxy')), downloadedFile)
   })
   promise.then(function () {
-    console.log('expect file md5: ',md5file(downloadedFile), 'to equal dde210e04e5c1b0d6019fd8a1199df18')
-    return validateMd5(downloadedFile, 'dde210e04e5c1b0d6019fd8a1199df18')
+    console.log('expect file md5: ', md5file(downloadedFile), 'to equal ', helper.md5)
+    return validateMd5(downloadedFile, helper.md5)
   })
   .then(function () {
     return extractDownload(downloadedFile, tmpPath)
