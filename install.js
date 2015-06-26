@@ -46,7 +46,8 @@ npmconf.load(function(err, conf) {
     return requestBinary(getRequestOptions(conf.get('proxy')), downloadedFile)
   })
   promise.then(function () {
-    return validateMd5(downloadedFile, 'DDE210E04E5C1B0D6019FD8A1199DF18')
+    console.log('expect file md5: ',md5file(downloadedFile), 'to equal dde210e04e5c1b0d6019fd8a1199df18')
+    return validateMd5(downloadedFile, 'dde210e04e5c1b0d6019fd8a1199df18')
   })
   .then(function () {
     return extractDownload(downloadedFile, tmpPath)
@@ -152,7 +153,7 @@ function validateMd5(filePath, md5value) {
   console.log('Validating MD5 checksum')
 
   try {
-    if (md5file(filePath) == md5value) {
+    if (md5file(filePath).toLowerCase() == md5value.toLowerCase()) {
       deferred.resolve(true)
     } else {
       deferred.reject('Error archive md5 checksum does not match')
