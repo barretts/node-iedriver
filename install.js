@@ -46,7 +46,7 @@ npmconf.load(function(err, conf) {
     return requestBinary(getRequestOptions(conf.get('proxy')), downloadedFile)
   })
   promise.then(function () {
-    return validateMd5(downloadedFile, '1d177d00dd1267556520973516491081')
+    return validateMd5(downloadedFile, 'DDE210E04E5C1B0D6019FD8A1199DF18')
   })
   .then(function () {
     return extractDownload(downloadedFile, tmpPath)
