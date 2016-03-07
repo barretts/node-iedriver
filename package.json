@@ -1,5 +1,5 @@
 {
-  "name": "iedriver",
+  "name": "ie64driver",
   "version": "2.52.0",
   "keywords": [
     "iedriver",
@@ -7,10 +7,10 @@
     "selenium"
   ],
   "description": "IEDriver for Selenium",
-  "homepage": "https://github.com/barretts/node-iedriver",
+  "homepage": "https://github.com/phillipgreenii/node-ie64driver",
   "repository": {
     "type": "git",
-    "url": "git://github.com/barretts/node-iedriver.git"
+    "url": "git://github.com/phillipgreenii/node-ie64driver.git"
   },
   "licenses": [
     {
