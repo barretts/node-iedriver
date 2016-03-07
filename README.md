@@ -14,7 +14,7 @@ Building and Installing
 -----------------------
 
 ```shell
-npm install iedriver
+npm install ie64driver
 ```
 
 Or grab the source and
