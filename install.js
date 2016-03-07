@@ -15,7 +15,7 @@ var util = require('util')
 var md5file = require('md5-file')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
-var downloadUrl = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.0.zip'
+var downloadUrl = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.zip'
 var platform = process.platform
 
 if (platform !== 'win32') {
@@ -23,9 +23,9 @@ if (platform !== 'win32') {
   process.exit(1)
 }
 
-downloadUrl = util.format(downloadUrl, helper.version, helper.version);
+downloadUrl = util.format(downloadUrl, helper.version, helper.binaryversion);
 
-var fileName = util.format('IEDriverServer_Win32_%s.0.zip', helper.version);
+var fileName = util.format('IEDriverServer_Win32_%s.zip', helper.binaryversion);
 
 npmconf.load(function(err, conf) {
   if (err) {
