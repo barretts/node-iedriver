@@ -3,6 +3,8 @@ IEDriver
 
 An NPM wrapper for Selenium [IEDriver](http://selenium-release.storage.googleapis.com).
 
+[IEDriver changelog](https://raw.githubusercontent.com/SeleniumHQ/selenium/master/cpp/iedriverserver/CHANGELOG)
+
 Testing notes
 -----------------------
 If you're testing on Windows 8 KB3025390 from Janurary 5th 2015 breaks IEDriver, just uninstall that update.
