@@ -15,57 +15,76 @@ var util = require('util')
 var md5file = require('md5-file')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
+var libPath64 = path.join(__dirname, 'lib', 'iedriver64')
 var downloadUrl = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.zip'
-var platform = process.platform
-
-if (platform !== 'win32') {
-  console.log('IEDriverServer only works on Windows:', process.platform, process.arch)
-  process.exit(1)
-}
+var downloadUrl64 = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_x64_%s.zip'
 
 downloadUrl = util.format(downloadUrl, helper.version, helper.binaryversion);
+downloadUrl64 = util.format(downloadUrl64, helper.version, helper.binaryversion);
 
 var fileName = util.format('IEDriverServer_Win32_%s.zip', helper.binaryversion);
+var fileName64 = util.format('IEDriverServer_x64_%s.zip', helper.binaryversion);
 
-npmconf.load(function(err, conf) {
-  if (err) {
-    console.log('Error loading npm config')
-    console.error(err)
-    process.exit(1)
-    return
-  }
+var promise = kew.resolve(true)
+promise = promise
+  .then(function() {
+    console.log('');
+    console.log('Downloading 64 bit Windows IE driver server');
+    console.log('-----');
+    return downloadDriver(downloadUrl64, fileName64, helper.md564, libPath64, 'iedriver64');
+  })
+  .then(function() {
+    console.log('');
+    console.log('Downloading 32 bit Windows IE driver server');
+    console.log('-----');
+    return downloadDriver(downloadUrl, fileName, helper.md5, libPath, 'iedriver');
+  });
 
-  var tmpPath = findSuitableTempDirectory(conf)
-  var downloadedFile = path.join(tmpPath, fileName)
-  var promise = kew.resolve(true)
+function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirName) {
+  var deferred = kew.defer();
 
-  // Start the install.
-  promise = promise.then(function () {
-    console.log('Downloading', downloadUrl)
-    console.log('Saving to', downloadedFile)
-    return requestBinary(getRequestOptions(conf.get('proxy')), downloadedFile)
-  })
-  promise.then(function () {
-    console.log('expect file md5: ', md5file(downloadedFile), 'to equal ', helper.md5)
-    return validateMd5(downloadedFile, helper.md5)
-  })
-  .then(function () {
-    return extractDownload(downloadedFile, tmpPath)
-  })
-  .then(function () {
-    return copyIntoPlace(tmpPath, libPath)
-  })
-  .then(function () {
-    console.log('Done. iedriver binary available at', helper.path)
-  })
-  .fail(function (err) {
-    console.error('iedriver installation failed', err, err.stack)
-    process.exit(1)
-  })
-})
+  npmconf.load(function(err, conf) {
+    if (err) {
+      console.log('Error loading npm config')
+      console.error(err)
+      process.exit(1)
+      return
+    }
 
+    var tmpPath = findSuitableTempDirectory(conf, _driverTmpDirName)
+    //console.log("tmp path", tmpPath);
+    var downloadedFile = path.join(tmpPath, _fileName)
+    var promise = kew.resolve(true)
 
-function findSuitableTempDirectory(npmConf) {
+    // Start the install.
+    promise = promise.then(function () {
+      console.log('Downloading', _downloadUrl)
+      //console.log('Saving to', downloadedFile)
+      return requestBinary(getRequestOptions(conf.get('proxy'), _downloadUrl), downloadedFile)
+    })
+    promise.then(function () {
+      return validateMd5(downloadedFile, _md5)
+    })
+    promise.then(function () {
+      return extractDownload(downloadedFile, tmpPath)
+    })
+    promise.then(function () {
+      return copyIntoPlace(tmpPath, _libPath)
+    })
+    promise.then(function () {
+      console.log('Success! IEDriverServer binary available at', _libPath+"\\IEDriverServer.exe");
+      deferred.resolve(true);
+    })
+    .fail(function (err) {
+      console.error('iedriver installation failed', err, err.stack);
+      process.exit(1);
+    })
+  });
+
+  return deferred.promise;
+}
+
+function findSuitableTempDirectory(npmConf, driverDir) {
   var now = Date.now()
   var candidateTmpDirs = [
     process.env.TMPDIR || '/tmp',
@@ -74,13 +93,15 @@ function findSuitableTempDirectory(npmConf) {
   ]
 
   for (var i = 0; i < candidateTmpDirs.length; i++) {
-    var candidatePath = path.join(candidateTmpDirs[i], 'iedriver')
+    var candidatePath = path.join(candidateTmpDirs[i], driverDir)
 
     try {
       mkdirp.sync(candidatePath, '0777')
       var testFile = path.join(candidatePath, now + '.tmp')
       fs.writeFileSync(testFile, 'test')
       fs.unlinkSync(testFile)
+      rimraf(candidatePath);
+      mkdirp.sync(candidatePath, '0777')
       return candidatePath
     } catch (e) {
       console.log(candidatePath, 'is not writable:', e.message)
@@ -92,11 +113,11 @@ function findSuitableTempDirectory(npmConf) {
 }
 
 
-function getRequestOptions(proxyUrl) {
+function getRequestOptions(proxyUrl, _downloadUrl) {
   if (proxyUrl) {
     var options = url.parse(proxyUrl)
-    options.path = downloadUrl
-    options.headers = { Host: url.parse(downloadUrl).host }
+    options.path = _downloadUrl
+    options.headers = { Host: url.parse(_downloadUrl).host }
     // Turn basic authorization into proxy-authorization.
     if (options.auth) {
       options.headers['Proxy-Authorization'] = 'Basic ' + new Buffer(options.auth).toString('base64')
@@ -105,7 +126,7 @@ function getRequestOptions(proxyUrl) {
 
     return options
   } else {
-    return url.parse(downloadUrl)
+    return url.parse(_downloadUrl)
   }
 }
 
@@ -150,10 +171,13 @@ function requestBinary(requestOptions, filePath) {
 function validateMd5(filePath, md5value) {
   var deferred = kew.defer()
 
-  console.log('Validating MD5 checksum')
+  console.log('Expecting archive MD5 hash of', md5value);
+  var md5fileValue = md5file(filePath).toLowerCase();
+  console.log('          archive MD5 hash is', md5fileValue);
+  //console.log('Validating MD5 checksum of file ' + filePath)
 
   try {
-    if (md5file(filePath).toLowerCase() == md5value.toLowerCase()) {
+    if (md5fileValue == md5value.toLowerCase()) {
       deferred.resolve(true)
     } else {
       deferred.reject('Error archive md5 checksum does not match')
@@ -170,7 +194,7 @@ function extractDownload(filePath, tmpPath) {
   var deferred = kew.defer()
   var options = {cwd: tmpPath}
 
-  console.log('Extracting zip contents')
+  //console.log('Extracting zip contents')
   try {
     var zip = new AdmZip(filePath)
     zip.extractAllTo(tmpPath, true)
@@ -181,10 +205,24 @@ function extractDownload(filePath, tmpPath) {
   return deferred.promise
 }
 
+function rmDir(dirPath) {
+  try { var files = fs.readdirSync(dirPath); }
+  catch(e) { return; }
+  if (files.length > 0)
+    for (var i = 0; i < files.length; i++) {
+      var filePath = dirPath + '/' + files[i];
+      if (fs.statSync(filePath).isFile())
+        fs.unlinkSync(filePath);
+      else
+        rmDir(filePath);
+    }
+  fs.rmdirSync(dirPath);
+};
+
 
 function copyIntoPlace(tmpPath, targetPath) {
   rimraf(targetPath);
-  console.log("Copying to target path", targetPath);
+  //console.log("Copying to target path", targetPath, "from", tmpPath);
   fs.mkdirSync(targetPath);
 
   // Look for the extracted directory, so we can rename it.
@@ -198,6 +236,7 @@ function copyIntoPlace(tmpPath, targetPath) {
     var targetFile = path.join(targetPath, name);
     var writer = fs.createWriteStream(targetFile);
     writer.on("close", function() {
+      //console.log("copied", name);
       deferred.resolve(true);
     });
 
