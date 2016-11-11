@@ -4,7 +4,7 @@ var AdmZip = require('adm-zip')
 var cp = require('child_process')
 var fs = require('fs')
 var helper = require('./lib/iedriver')
-var http = require('http')
+var http = require('https')
 var kew = require('kew')
 var npmconf = require('npmconf')
 var mkdirp = require('mkdirp')
@@ -16,8 +16,8 @@ var md5file = require('md5-file')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
 var libPath64 = path.join(__dirname, 'lib', 'iedriver64')
-var downloadUrl = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.zip'
-var downloadUrl64 = 'http://selenium-release.storage.googleapis.com/%s/IEDriverServer_x64_%s.zip'
+var downloadUrl = 'https://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.zip'
+var downloadUrl64 = 'https://selenium-release.storage.googleapis.com/%s/IEDriverServer_x64_%s.zip'
 
 downloadUrl = util.format(downloadUrl, helper.version, helper.binaryversion);
 downloadUrl64 = util.format(downloadUrl64, helper.version, helper.binaryversion);
