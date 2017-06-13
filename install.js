@@ -4,7 +4,7 @@ var AdmZip = require('adm-zip')
 var cp = require('child_process')
 var fs = require('fs')
 var helper = require('./lib/iedriver')
-var http = require('https')
+var request = require('request')
 var kew = require('kew')
 var npmconf = require('npmconf')
 var mkdirp = require('mkdirp')
@@ -60,7 +60,7 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
     promise = promise.then(function () {
       console.log('Downloading', _downloadUrl)
       //console.log('Saving to', downloadedFile)
-      return requestBinary(getRequestOptions(conf.get('proxy'), _downloadUrl), downloadedFile)
+      return requestBinary(_downloadUrl, downloadedFile)
     })
     promise.then(function () {
       return validateMd5(downloadedFile, _md5)
@@ -112,57 +112,18 @@ function findSuitableTempDirectory(npmConf, driverDir) {
   process.exit(1);
 }
 
-
-function getRequestOptions(proxyUrl, _downloadUrl) {
-  if (proxyUrl) {
-    var options = url.parse(proxyUrl)
-    options.path = _downloadUrl
-    options.headers = { Host: url.parse(_downloadUrl).host }
-    // Turn basic authorization into proxy-authorization.
-    if (options.auth) {
-      options.headers['Proxy-Authorization'] = 'Basic ' + new Buffer(options.auth).toString('base64')
-      delete options.auth
-    }
-
-    return options
-  } else {
-    return url.parse(_downloadUrl)
-  }
-}
-
-
-function requestBinary(requestOptions, filePath) {
+function requestBinary(_downloadUrl, filePath) {
   var deferred = kew.defer()
 
-  var count = 0
-  var notifiedCount = 0
-  var outFile = fs.openSync(filePath, 'w')
-
-  var client = http.get(requestOptions, function (response) {
-    var status = response.statusCode
-    console.log('Receiving...')
-
-    if (status === 200) {
-      response.addListener('data',   function (data) {
-        fs.writeSync(outFile, data, 0, data.length, null)
-        count += data.length
-        if ((count - notifiedCount) > 800000) {
-          console.log('Received ' + Math.floor(count / 1024) + 'K...')
-          notifiedCount = count
-        }
+  request
+      .get(_downloadUrl)
+      .on('error', function (err) {
+          deferred.reject('Error with http request: ' + util.inspect(response.headers))
       })
-
-      response.addListener('end',   function () {
-        console.log('Received ' + Math.floor(count / 1024) + 'K total.')
-        fs.closeSync(outFile)
-        deferred.resolve(true)
+      .on('end', function () {
+          deferred.resolve(true)
       })
-
-    } else {
-      client.abort()
-      deferred.reject('Error with http request: ' + util.inspect(response.headers))
-    }
-  })
+      .pipe(fs.createWriteStream(filePath))
 
   return deferred.promise
 }
