@@ -63,9 +63,6 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
       return requestBinary(_downloadUrl, downloadedFile)
     })
     promise.then(function () {
-      return validateMd5(downloadedFile, _md5)
-    })
-    promise.then(function () {
       return extractDownload(downloadedFile, tmpPath)
     })
     promise.then(function () {
