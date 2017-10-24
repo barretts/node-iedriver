@@ -13,6 +13,7 @@ var rimraf = require('rimraf').sync
 var url = require('url')
 var util = require('util')
 var md5file = require('md5-file')
+var extract = require('extract-zip')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
 var libPath64 = path.join(__dirname, 'lib', 'iedriver64')
@@ -50,7 +51,7 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
       process.exit(1)
       return
     }
-
+    
     var tmpPath = findSuitableTempDirectory(conf, _driverTmpDirName)
     //console.log("tmp path", tmpPath);
     var downloadedFile = path.join(tmpPath, _fileName)
@@ -63,7 +64,9 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
       return requestBinary(_downloadUrl, downloadedFile)
     })
     promise.then(function () {
-      return extractDownload(downloadedFile, tmpPath)
+      return extractDownload(downloadedFile, tmpPath).catch(function(err){
+          console.error('Error extracting ' + downloadedFile, err, err.stack);
+      });
     })
     promise.then(function () {
       return copyIntoPlace(tmpPath, _libPath)
@@ -84,7 +87,7 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
 function findSuitableTempDirectory(npmConf, driverDir) {
   var now = Date.now()
   var candidateTmpDirs = [
-    process.env.TMPDIR || '/tmp',
+    process.env.TMPDIR || './tmp',
     npmConf.get('tmp'),
     path.join(process.cwd(), 'tmp')
   ]
@@ -150,13 +153,21 @@ function validateMd5(filePath, md5value) {
 
 function extractDownload(filePath, tmpPath) {
   var deferred = kew.defer()
-  var options = {cwd: tmpPath}
+  var options = {dir: fs.realpathSync(tmpPath)}
 
-  //console.log('Extracting zip contents')
   try {
-    var zip = new AdmZip(filePath)
-    zip.extractAllTo(tmpPath, true)
-    deferred.resolve(true)
+    extract(filePath, options, function(err){
+      if(err) {
+        console.error(err)
+        deferred.reject('Error extracting archive ' + err.stack)
+      }
+      else {
+        console.log('done')
+        deferred.resolve(true)  
+      }
+    });
+    
+    
   } catch (err) {
     deferred.reject('Error extracting archive ' + err.stack)
   }
