@@ -1,42 +1,45 @@
 {
-  "name": "iedriver",
-  "version": "3.5.1",
-  "keywords": [
-    "iedriver",
-    "iedriverserver",
-    "selenium"
-  ],
-  "description": "IEDriver for Selenium",
-  "homepage": "https://github.com/barretts/node-iedriver",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/barretts/node-iedriver.git"
-  },
-  "licenses": [
-    {
-      "type": "Apache 2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    "name": "iedriver-exe",
+    "version": "3.5.1",
+    "keywords": [
+        "iedriver",
+        "iedriverserver",
+        "selenium"
+    ],
+    "description": "patch for IEDriver for Selenium",
+    "homepage": "https://github.com/gtdminh/node-iedriver",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gtdminh/node-iedriver"
+    },
+    "licenses": [{
+        "type": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }],
+    "author": {
+        "name": "Barrett Sonntag",
+        "email": "barrett@sosuke.com",
+        "url": "http://www.sosuke.com"
+    },
+    "contributors": [{
+        "name": "Minh T.",
+        "email": "gtdminh@gmail.com"
+    }],
+    "main": "lib/iedriver",
+    "bin": {
+        "iedriver": "./bin/iedriver"
+    },
+    "scripts": {
+        "install": "node install.js"
+    },
+    "dependencies": {
+        "adm-zip": "0.2.1",
+        "extract-zip": "^1.6.5",
+        "kew": "~0.1.7",
+        "md5-file": "^1.1.4",
+        "mkdirp": "0.3.5",
+        "npmconf": "0.0.24",
+        "request": "^2.81.0",
+        "rimraf": "~2.0.2"
     }
-  ],
-  "author": {
-    "name": "Barrett Sonntag",
-    "email": "barrett@sosuke.com",
-    "url": "http://www.sosuke.com"
-  },
-  "main": "lib/iedriver",
-  "bin": {
-    "iedriver": "./bin/iedriver"
-  },
-  "scripts": {
-    "install": "node install.js"
-  },
-  "dependencies": {
-    "adm-zip": "0.2.1",
-    "kew": "~0.1.7",
-    "md5-file": "^1.1.4",
-    "mkdirp": "0.3.5",
-    "npmconf": "0.0.24",
-    "request": "^2.81.0",
-    "rimraf": "~2.0.2"
-  }
 }
