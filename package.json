@@ -21,10 +21,6 @@
         "email": "barrett@sosuke.com",
         "url": "http://www.sosuke.com"
     },
-    "contributors": [{
-        "name": "Minh T.",
-        "email": "gtdminh@gmail.com"
-    }],
     "main": "lib/iedriver",
     "bin": {
         "iedriver": "./bin/iedriver"
