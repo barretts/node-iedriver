@@ -13,6 +13,7 @@ var rimraf = require('rimraf').sync
 var url = require('url')
 var util = require('util')
 var md5file = require('md5-file')
+var extract = require('extract-zip')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
 var libPath64 = path.join(__dirname, 'lib', 'iedriver64')
@@ -27,13 +28,13 @@ var fileName64 = util.format('IEDriverServer_x64_%s.zip', helper.binaryversion);
 
 var promise = kew.resolve(true)
 promise = promise
-  .then(function() {
+  .then(function () {
     console.log('');
     console.log('Downloading 64 bit Windows IE driver server');
     console.log('-----');
     return downloadDriver(downloadUrl64, fileName64, helper.md564, libPath64, 'iedriver64');
   })
-  .then(function() {
+  .then(function () {
     console.log('');
     console.log('Downloading 32 bit Windows IE driver server');
     console.log('-----');
@@ -43,7 +44,7 @@ promise = promise
 function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirName) {
   var deferred = kew.defer();
 
-  npmconf.load(function(err, conf) {
+  npmconf.load(function (err, conf) {
     if (err) {
       console.log('Error loading npm config')
       console.error(err)
@@ -54,28 +55,32 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
     var tmpPath = findSuitableTempDirectory(conf, _driverTmpDirName)
     //console.log("tmp path", tmpPath);
     var downloadedFile = path.join(tmpPath, _fileName)
-    var promise = kew.resolve(true)
+
 
     // Start the install.
-    promise = promise.then(function () {
-      console.log('Downloading', _downloadUrl)
-      //console.log('Saving to', downloadedFile)
-      return requestBinary(_downloadUrl, downloadedFile)
-    })
-    promise.then(function () {
+    var downloadPromise = requestBinary(_downloadUrl, downloadedFile)
+      
+    var extractPromise = downloadPromise.then(function () {
       return extractDownload(downloadedFile, tmpPath)
-    })
-    promise.then(function () {
+        .fail(function (err) {
+          console.error('Error extracting ' + downloadedFile, err, err.stack);
+        });
+    });
+
+    var copyPromise = extractPromise.then(function () {
+      console.log('copying ' + tmpPath + ' to ' + _libPath);
       return copyIntoPlace(tmpPath, _libPath)
-    })
-    promise.then(function () {
-      console.log('Success! IEDriverServer binary available at', _libPath+"\\IEDriverServer.exe");
-      deferred.resolve(true);
-    })
-    .fail(function (err) {
-      console.error('iedriver installation failed', err, err.stack);
-      process.exit(1);
-    })
+    });
+
+    kew.all(downloadPromise, extractPromise, copyPromise)
+      .then(function () {
+        console.log('Success! IEDriverServer binary available at', _libPath + "\\IEDriverServer.exe");
+        deferred.resolve(true);
+      })
+      .fail(function (err) {
+        console.error('iedriver installation failed', err, err.stack);
+        process.exit(1);
+      })
   });
 
   return deferred.promise;
@@ -84,7 +89,7 @@ function downloadDriver(_downloadUrl, _fileName, _md5, _libPath, _driverTmpDirNa
 function findSuitableTempDirectory(npmConf, driverDir) {
   var now = Date.now()
   var candidateTmpDirs = [
-    process.env.TMPDIR || '/tmp',
+    process.env.TMPDIR || './tmp',
     npmConf.get('tmp'),
     path.join(process.cwd(), 'tmp')
   ]
@@ -110,17 +115,19 @@ function findSuitableTempDirectory(npmConf, driverDir) {
 }
 
 function requestBinary(_downloadUrl, filePath) {
+  console.log('Downloading', _downloadUrl)
+  
   var deferred = kew.defer()
 
   request
-      .get(_downloadUrl)
-      .on('error', function (err) {
-          deferred.reject('Error with http request: ' + util.inspect(response.headers))
-      })
-      .on('end', function () {
-          deferred.resolve(true)
-      })
-      .pipe(fs.createWriteStream(filePath))
+    .get(_downloadUrl)
+    .on('error', function (err) {
+      deferred.reject('Error with http request: ' + util.inspect(response.headers))
+    })
+    .on('end', function () {
+      deferred.resolve(true)
+    })
+    .pipe(fs.createWriteStream(filePath))
 
   return deferred.promise
 }
@@ -150,13 +157,21 @@ function validateMd5(filePath, md5value) {
 
 function extractDownload(filePath, tmpPath) {
   var deferred = kew.defer()
-  var options = {cwd: tmpPath}
+  var options = { dir: fs.realpathSync(tmpPath) }
 
-  //console.log('Extracting zip contents')
   try {
-    var zip = new AdmZip(filePath)
-    zip.extractAllTo(tmpPath, true)
-    deferred.resolve(true)
+    extract(filePath, options, function (err) {
+      if (err) {
+        console.error(err)
+        deferred.reject('Error extracting archive ' + err.stack)
+      }
+      else {
+        console.log(filePath + ' extracted to ' + tmpPath)
+        deferred.resolve(true)
+      }
+    });
+
+
   } catch (err) {
     deferred.reject('Error extracting archive ' + err.stack)
   }
@@ -165,7 +180,7 @@ function extractDownload(filePath, tmpPath) {
 
 function rmDir(dirPath) {
   try { var files = fs.readdirSync(dirPath); }
-  catch(e) { return; }
+  catch (e) { return; }
   if (files.length > 0)
     for (var i = 0; i < files.length; i++) {
       var filePath = dirPath + '/' + files[i];
@@ -193,7 +208,7 @@ function copyIntoPlace(tmpPath, targetPath) {
 
     var targetFile = path.join(targetPath, name);
     var writer = fs.createWriteStream(targetFile);
-    writer.on("close", function() {
+    writer.on("close", function () {
       //console.log("copied", name);
       deferred.resolve(true);
     });
