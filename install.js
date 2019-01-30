@@ -119,8 +119,10 @@ function requestBinary(_downloadUrl, filePath) {
   
   var deferred = kew.defer()
 
-  request
-    .get(_downloadUrl)
+  const requestOptions = getRequestOptions(_downloadUrl)
+  const client = request(requestOptions)        
+
+  client
     .on('error', function (err) {
       deferred.reject('Error with http request: ' + util.inspect(response.headers))
     })
@@ -132,6 +134,14 @@ function requestBinary(_downloadUrl, filePath) {
   return deferred.promise
 }
 
+function getRequestOptions(_downloadUrl) {
+  const options = {uri: _downloadUrl, method: 'GET'};
+  const proxyUrl =  process.env.npm_config_https_proxy || process.env.npm_config_proxy || process.env.npm_config_http_proxy;
+  if (proxyUrl) {
+    options.proxy = proxyUrl;
+  }
+  return options;
+}
 
 function validateMd5(filePath, md5value) {
   var deferred = kew.defer()
