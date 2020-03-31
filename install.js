@@ -1,7 +1,5 @@
 'use strict'
 
-var AdmZip = require('adm-zip')
-var cp = require('child_process')
 var fs = require('fs')
 var helper = require('./lib/iedriver')
 var request = require('request')
@@ -10,9 +8,7 @@ var npmconf = require('npmconf')
 var mkdirp = require('mkdirp')
 var path = require('path')
 var rimraf = require('rimraf').sync
-var url = require('url')
 var util = require('util')
-var md5file = require('md5-file')
 var extract = require('extract-zip')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
@@ -146,28 +142,6 @@ function getRequestOptions(_downloadUrl) {
   return options;
 }
 
-function validateMd5(filePath, md5value) {
-  var deferred = kew.defer()
-
-  console.log('Expecting archive MD5 hash of', md5value);
-  var md5fileValue = md5file(filePath).toLowerCase();
-  console.log('          archive MD5 hash is', md5fileValue);
-  //console.log('Validating MD5 checksum of file ' + filePath)
-
-  try {
-    if (md5fileValue == md5value.toLowerCase()) {
-      deferred.resolve(true)
-    } else {
-      deferred.reject('Error archive md5 checksum does not match')
-    }
-  } catch (err) {
-    deferred.reject('Error trying to match md5 checksum')
-  }
-
-  return deferred.promise
-}
-
-
 function extractDownload(filePath, tmpPath) {
   var deferred = kew.defer()
   var options = { dir: fs.realpathSync(tmpPath) }
@@ -190,20 +164,6 @@ function extractDownload(filePath, tmpPath) {
   }
   return deferred.promise
 }
-
-function rmDir(dirPath) {
-  try { var files = fs.readdirSync(dirPath); }
-  catch (e) { return; }
-  if (files.length > 0)
-    for (var i = 0; i < files.length; i++) {
-      var filePath = dirPath + '/' + files[i];
-      if (fs.statSync(filePath).isFile())
-        fs.unlinkSync(filePath);
-      else
-        rmDir(filePath);
-    }
-  fs.rmdirSync(dirPath);
-};
 
 
 function copyIntoPlace(tmpPath, targetPath) {
