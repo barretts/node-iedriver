@@ -123,7 +123,7 @@ function requestBinary(_downloadUrl, filePath) {
 
   client
     .on('error', function (err) {
-      deferred.reject('Error with http request: ' + util.inspect(response.headers))
+      deferred.reject('Error with http request: ' + util.inspect(err))
     })
     .on('end', function () {
       deferred.resolve(true)
