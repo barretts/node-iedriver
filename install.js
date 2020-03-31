@@ -17,8 +17,11 @@ var extract = require('extract-zip')
 
 var libPath = path.join(__dirname, 'lib', 'iedriver')
 var libPath64 = path.join(__dirname, 'lib', 'iedriver64')
-var downloadUrl = 'https://selenium-release.storage.googleapis.com/%s/IEDriverServer_Win32_%s.zip'
-var downloadUrl64 = 'https://selenium-release.storage.googleapis.com/%s/IEDriverServer_x64_%s.zip'
+
+var baseUrl = process.env.IEDRIVER_CDNURL || process.env.npm_config_iedriver_cdnurl
+  || 'https://selenium-release.storage.googleapis.com'
+var downloadUrl = baseUrl + '/%s/IEDriverServer_Win32_%s.zip'
+var downloadUrl64 = baseUrl + '/%s/IEDriverServer_x64_%s.zip'
 
 downloadUrl = util.format(downloadUrl, helper.version, helper.binaryversion);
 downloadUrl64 = util.format(downloadUrl64, helper.version, helper.binaryversion);
