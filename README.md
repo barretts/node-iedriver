@@ -1,3 +1,5 @@
+
+
 IEDriver
 =======
 
@@ -29,7 +31,7 @@ What this is really doing is just grabbing a particular "blessed" (by
 this module) version of IEDriver. As new versions are released
 and vetted, this module will be updated accordingly.
 
-The package has been set up to fetch and run IEDriver for Windows.
+The package has been set up to fetch and run IEDriver for 32-bit and 64-bit Windows.
 
 Versioning
 ----------
